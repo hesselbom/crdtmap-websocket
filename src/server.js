@@ -125,6 +125,7 @@ function closeConn (sharedDoc, ws) {
     if (sharedDoc.connections.size === 0 && sharedDoc.persistence != null) {
       // if persisted, we store state and remove doc
       sharedDoc.persistence.writeState(sharedDoc.docId, sharedDoc.doc)
+        .then(() => sharedDoc.doc.destroy())
       sharedDoc.handler.docs.delete(sharedDoc.docId)
     }
   }

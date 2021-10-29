@@ -34,6 +34,9 @@ export function createWebsocketClientHandler (ws, doc, options) {
   // doc.on('snapshot', () => console.log(doc.toJSON()))
 
   return {
+    destroy: function () {
+      doc.destroy()
+    },
     handleClose: function () {
       state.wsConnected = false
     },

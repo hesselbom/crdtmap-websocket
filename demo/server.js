@@ -1,10 +1,10 @@
 const { createWebsocketServer } = require('../dist/server.cjs')
 
 const demoPersistence = {
-  bindState: (docId, doc) => {
+  bindState: async (docId, doc) => {
     console.log('bindState', docId)
   },
-  writeState: (docId, doc) => {
+  writeState: async (docId, doc) => {
     console.log('writeState', docId)
   }
 }
