@@ -1,0 +1,29 @@
+{
+  "name": "v-websocket",
+  "version": "0.1.0",
+  "main": "./dist/client.cjs",
+  "license": "MIT",
+  "exports": {
+    "./client": "./dist/client.cjs",
+    "./server": "./dist/server.cjs"
+  },
+  "scripts": {
+    "dist": "rm -rf dist && rollup -c",
+    "prepare": "npm run dist",
+    "test": "jest",
+    "lint": "standard",
+    "demo:server": "node ./demo/server.js",
+    "demo:client": "node ./demo/client.js"
+  },
+  "devDependencies": {
+    "human-readable-random-string": "^0.0.2",
+    "jest": "^27.3.1",
+    "rollup": "^2.58.3",
+    "standard": "^16.0.4"
+  },
+  "dependencies": {
+    "lib0": "^0.2.42",
+    "v-sync": "https://github.com/hesselbom/v-sync",
+    "vjs": "https://github.com/hesselbom/vjs"
+  }
+}
