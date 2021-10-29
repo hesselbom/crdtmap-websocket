@@ -6,11 +6,9 @@ function broadcastMessage (state, message) {
   if (state.wsConnected) {
     state.ws.send(message)
   }
-  // if (provider.bcconnected) {
-  //   provider.mux(() => {
-  //     bc.publish(provider.bcChannel, buf)
-  //   })
-  // }
+  if (state.onBroadcastMessage) {
+    state.onBroadcastMessage(state, message)
+  }
 }
 
 export function createWebsocketClient () {
@@ -22,7 +20,8 @@ export function createWebsocketClientHandler (ws, doc, options) {
 
   const state = {
     ws,
-    wsConnected: false
+    wsConnected: false,
+    onBroadcastMessage: options && options.onBroadcastMessage
   }
 
   const onUpdate = (snapshot) => {
