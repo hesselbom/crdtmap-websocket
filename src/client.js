@@ -103,7 +103,8 @@ export function createWebsocketClientHandler (ws, doc, options = {}) {
     wsConnected: false,
     wsUnsuccessfulReconnects: 0,
     synced: false,
-    onBroadcastMessage: options.onBroadcastMessage
+    onBroadcastMessage: options.onBroadcastMessage,
+    messageHandlers: options.messageHandlers || {}
   }
 
   const onUpdate = (snapshot) => {
@@ -178,6 +179,15 @@ export function createWebsocketClientHandler (ws, doc, options = {}) {
               if (state.ws) state.ws.send(encoding.toUint8Array(encoder))
             }
             break
+          }
+          default: {
+            const messageHandler = state.messageHandlers[messageType]
+
+            if (messageHandler) {
+              messageHandler(encoder, decoder)
+            } else {
+              console.error('Unable to compute message')
+            }
           }
         }
       } catch (err) {
