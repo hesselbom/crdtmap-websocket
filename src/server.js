@@ -28,42 +28,12 @@ export function createWebsocketServer ({
 
   const wsHandler = createWebsocketServerHandler({ persistence })
 
-  const setupWSConnection = (ws, req) => {
+  wss.on('connection', (ws, req) => {
     // Extract docId from url
     const docId = req.url.slice(1).split('?')[0]
-    const client = wsHandler.setupClient(ws, docId)
 
-    let pongReceived = true
-    const pingInterval = setInterval(() => {
-      if (!pongReceived) {
-        // If no pong received, close connection
-        if (client.sharedDoc.connections.has(ws)) {
-          closeConn(client.sharedDoc, ws)
-        }
-        clearInterval(pingInterval)
-      } else if (client.sharedDoc.connections.has(ws)) {
-        // If pong was received, send new ping and wait for pong
-        pongReceived = false
-
-        try {
-          ws.ping()
-        } catch (e) {
-          closeConn(client.sharedDoc, ws)
-          clearInterval(pingInterval)
-        }
-      }
-    }, PING_TIMEOUT)
-    ws.on('pong', () => { pongReceived = true })
-
-    client.handleOpen()
-    ws.on('message', (message) => client.handleMessage(new Uint8Array(message)))
-    ws.on('close', () => {
-      closeConn(client.sharedDoc, ws)
-      clearInterval(pingInterval)
-    })
-  }
-
-  wss.on('connection', setupWSConnection)
+    setupWSConnection(ws, req, docId, wsHandler)
+  })
 
   server.on('upgrade', (request, socket, head) => {
     const handleAuth = ws => wss.emit('connection', ws, request)
@@ -73,6 +43,39 @@ export function createWebsocketServer ({
   server.listen({ host, port })
 
   console.log(`Running at '${host}' on port ${port}`)
+}
+
+export function setupWSConnection (ws, req, docId, wsHandler) {
+  const client = wsHandler.setupClient(ws, docId)
+
+  let pongReceived = true
+  const pingInterval = setInterval(() => {
+    if (!pongReceived) {
+      // If no pong received, close connection
+      if (client.sharedDoc.connections.has(ws)) {
+        closeConn(client.sharedDoc, ws)
+      }
+      clearInterval(pingInterval)
+    } else if (client.sharedDoc.connections.has(ws)) {
+      // If pong was received, send new ping and wait for pong
+      pongReceived = false
+
+      try {
+        ws.ping()
+      } catch (e) {
+        closeConn(client.sharedDoc, ws)
+        clearInterval(pingInterval)
+      }
+    }
+  }, PING_TIMEOUT)
+  ws.on('pong', () => { pongReceived = true })
+
+  client.handleOpen()
+  ws.on('message', (message) => client.handleMessage(new Uint8Array(message)))
+  ws.on('close', () => {
+    closeConn(client.sharedDoc, ws)
+    clearInterval(pingInterval)
+  })
 }
 
 export function createWebsocketServerHandler ({ persistence } = {}) {
