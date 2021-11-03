@@ -13,11 +13,13 @@
     "test": "jest",
     "lint": "standard",
     "demo:server": "node ./demo/server.js",
-    "demo:client": "node ./demo/client.js"
+    "demo:client:node": "node ./demo/client.js",
+    "demo:client:web": "parcel ./demo/client.html"
   },
   "devDependencies": {
     "human-readable-random-string": "^0.0.2",
     "jest": "^27.3.1",
+    "parcel": "^2.0.0",
     "rollup": "^2.58.3",
     "standard": "^16.0.4"
   },

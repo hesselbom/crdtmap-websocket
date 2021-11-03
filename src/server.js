@@ -10,6 +10,9 @@ const WS_READY_STATE_CONNECTING = 0
 const WS_READY_STATE_OPEN = 1
 const WS_READY_STATE_CLOSING = 2 // eslint-disable-line
 const WS_READY_STATE_CLOSED = 3 // eslint-disable-line
+const PING_TIMEOUT = 30000
+
+export const V_WEBSOCKET_MESSAGE_TYPE_SYNC = 0
 
 // Dummy server
 export function createWebsocketServer ({
@@ -30,9 +33,34 @@ export function createWebsocketServer ({
     const docId = req.url.slice(1).split('?')[0]
     const client = wsHandler.setupClient(ws, docId)
 
+    let pongReceived = true
+    const pingInterval = setInterval(() => {
+      if (!pongReceived) {
+        // If no pong received, close connection
+        if (client.sharedDoc.connections.has(ws)) {
+          closeConn(client.sharedDoc, ws)
+        }
+        clearInterval(pingInterval)
+      } else if (client.sharedDoc.connections.has(ws)) {
+        // If pong was received, send new ping and wait for pong
+        pongReceived = false
+
+        try {
+          ws.ping()
+        } catch (e) {
+          closeConn(client.sharedDoc, ws)
+          clearInterval(pingInterval)
+        }
+      }
+    }, PING_TIMEOUT)
+    ws.on('pong', () => { pongReceived = true })
+
     client.handleOpen()
     ws.on('message', (message) => client.handleMessage(new Uint8Array(message)))
-    ws.on('close', () => closeConn(client.sharedDoc, ws))
+    ws.on('close', () => {
+      closeConn(client.sharedDoc, ws)
+      clearInterval(pingInterval)
+    })
   }
 
   wss.on('connection', setupWSConnection)
@@ -65,6 +93,7 @@ export function createWebsocketServerHandler ({ persistence } = {}) {
         sharedDoc,
         handleOpen: function () {
           const encoder = encoding.createEncoder()
+          encoding.writeUint8(encoder, V_WEBSOCKET_MESSAGE_TYPE_SYNC)
           writeSyncStep1(encoder, doc)
           send(sharedDoc, ws, encoding.toUint8Array(encoder))
         },
@@ -72,11 +101,19 @@ export function createWebsocketServerHandler ({ persistence } = {}) {
           try {
             const encoder = encoding.createEncoder()
             const decoder = decoding.createDecoder(message)
+            const messageType = decoding.readUint8(decoder)
 
-            readSyncMessage(decoder, encoder, doc)
+            switch (messageType) {
+              case V_WEBSOCKET_MESSAGE_TYPE_SYNC: {
+                encoding.writeUint8(encoder, V_WEBSOCKET_MESSAGE_TYPE_SYNC)
 
-            if (encoding.length(encoder) > 0) {
-              send(sharedDoc, ws, encoding.toUint8Array(encoder))
+                readSyncMessage(decoder, encoder, doc)
+
+                if (encoding.length(encoder) > 1) {
+                  send(sharedDoc, ws, encoding.toUint8Array(encoder))
+                }
+                break
+              }
             }
           } catch (err) {
             console.error(err)
@@ -103,6 +140,9 @@ function createSharedDoc (docId, persistence) {
 
   const onUpdate = (snapshot) => {
     const encoder = encoding.createEncoder()
+
+    encoding.writeUint8(encoder, V_WEBSOCKET_MESSAGE_TYPE_SYNC)
+
     writeUpdate(encoder, snapshot)
 
     // Send to all connections
