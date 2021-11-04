@@ -84,6 +84,7 @@ export function createWebsocketServerHandler ({ persistence } = {}) {
 
   return {
     docs,
+    getDoc,
     setupClient: function (ws, docId) {
       ws.binaryType = 'arraybuffer'
 
