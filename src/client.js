@@ -2,8 +2,9 @@
 import * as encoding from 'lib0/dist/encoding.cjs'
 import * as decoding from 'lib0/dist/decoding.cjs'
 import * as set from 'lib0/dist/set.cjs'
+import * as bc from 'lib0/broadcastchannel'
 import { setIfUndefined } from 'lib0/dist/map.cjs'
-import { writeSyncStep1, writeUpdate, readSyncMessage, V_MESSAGE_SYNC_2 } from 'v-sync'
+import { writeSyncStep1, writeSyncStep2, writeUpdate, readSyncMessage, V_MESSAGE_SYNC_2 } from 'v-sync'
 
 export const V_WEBSOCKET_MESSAGE_TYPE_SYNC = 0
 
@@ -11,7 +12,7 @@ const RECONNECT_TIMEOUT_BASE = 1200
 const MAX_RECONNECT_TIMEOUT = 2500
 
 function broadcastMessage (state, message) {
-  if (state.ws) {
+  if (state.ws && state.wsConnected) {
     state.ws.send(message)
   }
   if (state.onBroadcastMessage) {
@@ -21,6 +22,7 @@ function broadcastMessage (state, message) {
 
 export function createWebsocketClient (url, doc, options = {}) {
   const observers = new Map()
+  const bcChannelName = url.split('?')[0]
 
   const wsHandler = createWebsocketClientHandler(null, doc, {
     onSynced: () => client.emit('synced', []),
@@ -48,8 +50,20 @@ export function createWebsocketClient (url, doc, options = {}) {
         Math.min(Math.log10(wsHandler.state.wsUnsuccessfulReconnects + 1) * RECONNECT_TIMEOUT_BASE, MAX_RECONNECT_TIMEOUT)
       )
     },
+    onBroadcastMessage: (state, message) => {
+      bc.publish(bcChannelName, message)
+    },
     ...options
   })
+
+  const bcSubscriber = (data) => {
+    const message = new Uint8Array(data)
+    const encoder = wsHandler.readMessage(message, false)
+
+    if (encoding.length(encoder) > 1) {
+      bc.publish(bcChannelName, encoding.toUint8Array(encoder))
+    }
+  }
 
   const createNewWebSocket = () => {
     const ws = new WebSocket(url)
@@ -69,6 +83,21 @@ export function createWebsocketClient (url, doc, options = {}) {
   }
   createNewWebSocket()
 
+  bc.subscribe(bcChannelName, bcSubscriber)
+  wsHandler.state.bcConnected = true
+
+  // send sync step1 to bc, copied from https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
+  // write sync step 1
+  const encoderSync = encoding.createEncoder()
+  encoding.writeVarUint(encoderSync, V_WEBSOCKET_MESSAGE_TYPE_SYNC)
+  writeSyncStep1(encoderSync, doc)
+  bc.publish(bcChannelName, encoding.toUint8Array(encoderSync))
+  // broadcast local state
+  const encoderState = encoding.createEncoder()
+  encoding.writeVarUint(encoderState, V_WEBSOCKET_MESSAGE_TYPE_SYNC)
+  writeSyncStep2(encoderState, doc)
+  bc.publish(bcChannelName, encoding.toUint8Array(encoderState))
+
   const client = {
     on: function (name, callback) {
       setIfUndefined(observers, name, set.create).add(callback)
@@ -86,9 +115,16 @@ export function createWebsocketClient (url, doc, options = {}) {
       // copy all listeners to an array first to make sure that no event is emitted to listeners that are subscribed while the event handler is called.
       return Array.from((observers.get(name) || new Map()).values()).forEach(f => f(...args))
     },
-    destroy: () => {
-      if (wsHandler.state.ws) wsHandler.state.ws.close()
+    destroy: function () {
+      this.disconnect()
       wsHandler.destroy()
+    },
+    disconnect: function () {
+      if (wsHandler.state.ws) wsHandler.state.ws.close()
+      if (wsHandler.state.bcConnected) {
+        bc.unsubscribe(bcChannelName, this._bcSubscriber)
+        wsHandler.state.bcConnected = false
+      }
     }
   }
 
@@ -150,11 +186,11 @@ export function createWebsocketClientHandler (ws, doc, options = {}) {
       // Resync is same as first sync (i.e. sync step 1)
       this.resync()
     },
-    handleMessage: function (message) {
-      try {
-        const encoder = encoding.createEncoder()
-        const decoder = decoding.createDecoder(message)
+    readMessage: function (message, emitSynced) {
+      const encoder = encoding.createEncoder()
+      const decoder = decoding.createDecoder(message)
 
+      try {
         if (options.prefixByte != null) {
           encoding.writeVarUint(encoder, options.prefixByte)
         }
@@ -167,16 +203,12 @@ export function createWebsocketClientHandler (ws, doc, options = {}) {
 
             const syncMessageType = readSyncMessage(decoder, encoder, doc)
 
-            if (syncMessageType === V_MESSAGE_SYNC_2 && !state.synced) {
+            if (syncMessageType === V_MESSAGE_SYNC_2 && !state.synced && emitSynced) {
               state.synced = true
 
               if (options.onSynced) {
                 options.onSynced()
               }
-            }
-
-            if (encoding.length(encoder) > 1) {
-              if (state.ws) state.ws.send(encoding.toUint8Array(encoder))
             }
             break
           }
@@ -193,6 +225,15 @@ export function createWebsocketClientHandler (ws, doc, options = {}) {
       } catch (err) {
         console.error(err)
         doc.emit('error', [err])
+      }
+
+      return encoder
+    },
+    handleMessage: function (message) {
+      const encoder = this.readMessage(message, true)
+
+      if (encoding.length(encoder) > 1) {
+        if (state.ws) state.ws.send(encoding.toUint8Array(encoder))
       }
     }
   }
