@@ -1,10 +1,10 @@
 const { createWebsocketClientHandler } = require('../dist/client.cjs')
-const VDoc = require('vjs')
+const CrdtMap = require('crdtmap')
 const WebSocket = require('ws')
 const hrrs = require('human-readable-random-string')
 
 const ws = new WebSocket('ws://localhost:1234/docId123')
-const doc = VDoc()
+const doc = CrdtMap()
 const wsHandler = createWebsocketClientHandler(ws, doc)
 
 doc.set('client-key', 'def')

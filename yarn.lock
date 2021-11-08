@@ -2102,6 +2102,28 @@ cosmiconfig@^7.0.1:
     path-type "^4.0.0"
     yaml "^1.10.0"
 
+crdtmap-sync@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/crdtmap-sync/-/crdtmap-sync-0.1.0.tgz#30c482fc35922f39d709ffd795c774c5a91aae79"
+  integrity sha512-84CrPlpQ9HPIbjNvbnP9/7eykVTbFh39wu91jqtIQ5LQb4n36GlGin83FHFrMGZoPjbGtJih1DrYJUtnWW2F7g==
+  dependencies:
+    crdtmap "0.1.0"
+    lib0 "^0.2.42"
+
+crdtmap@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/crdtmap/-/crdtmap-0.1.0.tgz#4ccb7356cc0be184c0f3d2f7af774f3addf2ce85"
+  integrity sha512-0ujmiZHCti47aKQqnXUz1Kb5eBY2zuizJ3DJUAMM4rb8u+psaEAtHuaMBD6fi4XZSggGZLDTJfqhBcLguxROqQ==
+  dependencies:
+    lib0 "^0.2.42"
+
+crdtmap@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/crdtmap/-/crdtmap-0.1.1.tgz#3ccd01d6ec05aedf02f17aa169e4ffa004efee8c"
+  integrity sha512-UlUHimSISj0tNEwfPwuSZDmc89e9ahlq5bHUaGeJOtJMo6GSazK3EftG/HsLHQXxcmZeJwwTk+KEDQalvvl8WA==
+  dependencies:
+    lib0 "^0.2.42"
+
 create-ecdh@^4.0.0:
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/create-ecdh/-/create-ecdh-4.0.4.tgz#d6e7f4bffa66736085a0762fd3a632684dabcc4e"
@@ -6697,13 +6719,6 @@ uuid@^3.3.2:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
 
-"v-sync@https://github.com/hesselbom/v-sync":
-  version "0.1.0"
-  resolved "https://github.com/hesselbom/v-sync#0389ba8636e8fb1063e94bdb68e7a943e094b214"
-  dependencies:
-    lib0 "^0.2.42"
-    vjs "https://github.com/hesselbom/vjs"
-
 v8-compile-cache@^2.0.0, v8-compile-cache@^2.0.3:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/v8-compile-cache/-/v8-compile-cache-2.3.0.tgz#2de19618c66dc247dcfb6f99338035d8245a2cee"
@@ -6739,12 +6754,6 @@ verror@1.10.0:
     assert-plus "^1.0.0"
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
-
-"vjs@https://github.com/hesselbom/vjs":
-  version "0.1.0"
-  resolved "https://github.com/hesselbom/vjs#0eff432f08d4a5655e36ce1a308afadc78a4bea7"
-  dependencies:
-    lib0 "^0.2.42"
 
 vm-browserify@^1.1.2:
   version "1.1.2"

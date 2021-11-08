@@ -1,10 +1,10 @@
 import WebSocket from 'ws'
 import http from 'http'
-import VDoc from 'vjs'
+import CrdtMap from 'crdtmap'
 import * as encoding from 'lib0/dist/encoding.cjs'
 import * as decoding from 'lib0/dist/decoding.cjs'
 import * as map from 'lib0/dist/map.cjs'
-import { writeSyncStep1, writeUpdate, readSyncMessage } from 'v-sync'
+import { writeSyncStep1, writeUpdate, readSyncMessage } from 'crdtmap-sync'
 
 const WS_READY_STATE_CONNECTING = 0
 const WS_READY_STATE_OPEN = 1
@@ -134,7 +134,7 @@ export function createWebsocketServerHandler ({ persistence } = {}) {
 }
 
 function createSharedDoc (docId, persistence) {
-  const doc = VDoc()
+  const doc = CrdtMap()
   const connections = new Map()
   const sharedDoc = { docId, doc, connections, persistence }
 

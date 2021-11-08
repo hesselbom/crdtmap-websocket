@@ -25,7 +25,11 @@
   },
   "dependencies": {
     "lib0": "^0.2.42",
-    "v-sync": "https://github.com/hesselbom/v-sync",
-    "vjs": "https://github.com/hesselbom/vjs"
+    "crdtmap-sync": "0.1.0",
+    "crdtmap": "0.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hesselbom/crdtmap-websocket"
   }
 }

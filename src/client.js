@@ -4,7 +4,7 @@ import * as decoding from 'lib0/dist/decoding.cjs'
 import * as set from 'lib0/dist/set.cjs'
 import * as bc from 'lib0/broadcastchannel'
 import { setIfUndefined } from 'lib0/dist/map.cjs'
-import { writeSyncStep1, writeSyncStep2, writeUpdate, readSyncMessage, V_MESSAGE_SYNC_2 } from 'v-sync'
+import { writeSyncStep1, writeSyncStep2, writeUpdate, readSyncMessage, V_MESSAGE_SYNC_2 } from 'crdtmap-sync'
 
 export const V_WEBSOCKET_MESSAGE_TYPE_SYNC = 0
 
