@@ -1,5 +1,5 @@
 {
-  "name": "v-websocket",
+  "name": "crdtmap-websocket",
   "version": "0.1.0",
   "main": "./dist/client.cjs",
   "license": "MIT",
